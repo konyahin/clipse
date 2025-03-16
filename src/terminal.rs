@@ -55,7 +55,10 @@ impl Render for Terminal {
                     Ok(number) => return Action::Follow(number),
                     Err(_) => println!("You should specify link number"),
                 },
-                ["go", link] => return Action::Load(Link::from_string(link.to_string())),
+                ["go", link] => match Link::from_string(link) {
+                    Some(link) => return Action::Load(link),
+                    None => println!("Wrong format for link: {link}"),
+                },
                 ["help"] => println!("{USAGE}"),
                 [""] => {}
                 _ => println!("Unknown command: {}", line),

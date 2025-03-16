@@ -1,19 +1,17 @@
-use text_io::try_scan;
-
 pub enum DomainError {
     Network(String),
     Parsing(String),
     Logic(String),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Link {
     pub format: Format,
     pub host_port: String,
     pub url: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Format {
     GopherMap,
     TextFile,
@@ -28,18 +26,26 @@ impl Link {
         }
     }
 
-    pub fn from_string(link: String) -> Self {
-        // TODO too bad, should write my
-        Link::scan_full_link(link).unwrap()
-    }
+    pub fn from_string(link: &str) -> Option<Self> {
+        let mut parts = link.split("/");
 
-    fn scan_full_link(link: String) -> Result<Link, Box<dyn std::error::Error>> {
-        let host_port: String;
-        let url: String;
+        let host_port = if let Some(host_port) = parts.next() {
+            if host_port.is_empty() {
+                return None;
+            }
+            if host_port.contains(":") {
+                host_port.to_owned()
+            } else {
+                format!("{host_port}:70")
+            }
+        } else {
+            return None;
+        };
+        
 
-        try_scan!(link.bytes() => "{}/{}", host_port, url);
+        let url = format!("/{}", parts.collect::<Vec<&str>>().join("/"));
 
-        Ok(Link {
+        Some(Link {
             format: Format::GopherMap,
             host_port,
             url,
@@ -94,4 +100,65 @@ pub trait Render {
     fn render(&self, page: &Page);
     fn get_action(&self) -> Action;
     fn show_error(&self, error: &DomainError);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_link_wrong_format() {
+        assert_eq!(
+            Link::from_string("/example.com"),
+            None,
+        );
+    }
+
+    #[test]
+    fn test_link_format_host() {
+        assert_eq!(
+            Link::from_string("example.com").unwrap(),
+            Link {
+                format: Format::GopherMap,
+                host_port: "example.com:70".to_owned(),
+                url: "/".to_owned()
+            },
+        );
+    }
+
+    #[test]
+    fn test_link_format_host_port() {
+        assert_eq!(
+            Link::from_string("example.com:89").unwrap(),
+            Link {
+                format: Format::GopherMap,
+                host_port: "example.com:89".to_owned(),
+                url: "/".to_owned()
+            },
+        );
+    }
+
+    #[test]
+    fn test_link_format_host_port_url() {
+        assert_eq!(
+            Link::from_string("example.com:69/test").unwrap(),
+            Link {
+                format: Format::GopherMap,
+                host_port: "example.com:69".to_owned(),
+                url: "/test".to_owned()
+            },
+        );
+    }
+
+    #[test]
+    fn test_link_format_host_url() {
+        assert_eq!(
+            Link::from_string("example.com/test").unwrap(),
+            Link {
+                format: Format::GopherMap,
+                host_port: "example.com:70".to_owned(),
+                url: "/test".to_owned()
+            },
+        );
+    }
 }
