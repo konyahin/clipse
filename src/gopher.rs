@@ -94,9 +94,8 @@ fn parse_link(text: &str, format: Format) -> Result<Element, DomainError> {
         title,
         Link {
             format,
-            host,
-            port,
             url,
+            host_port: format!("{}:{}", host, port),
         },
     ))
 }
