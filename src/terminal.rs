@@ -16,7 +16,7 @@ impl Render for Terminal {
     fn render(&self, page: &Page) {
         println!(
             "{}",
-            format!("=== | Show {}{}", page.link.host_port, page.link.url).green()
+            format!("=== | On {}{}", page.link.host_port, page.link.url).green()
         );
 
         let mut link_number = 0;

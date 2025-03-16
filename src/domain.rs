@@ -1,3 +1,14 @@
+const BANNER: &str = r"
+       _ _                
+      | (_)               
+   ___| |_ _ __  ___  ___ 
+  / __| | | '_ \/ __|/ _ \
+ | (__| | | |_) \__ \  __/
+  \___|_|_| .__/|___/\___|
+          | |             
+          |_|             
+";
+
 pub enum DomainError {
     Network(String),
     Parsing(String),
@@ -18,14 +29,6 @@ pub enum Format {
 }
 
 impl Link {
-    pub fn new_gopher(host: String) -> Self {
-        Link {
-            format: Format::GopherMap,
-            host_port: format!("{host}:70"),
-            url: String::from("/"),
-        }
-    }
-
     pub fn from_string(link: &str) -> Option<Self> {
         let mut parts = link.split("/");
 
@@ -60,6 +63,18 @@ pub struct Page {
 }
 
 impl Page {
+    pub fn default_page() -> Page {
+        Page {
+            link: Link {
+                format: Format::TextFile,
+                host_port: "home page".to_owned(),
+                url: "".to_owned(),
+            },
+            content: Content::File(BANNER.to_owned()),
+            errors: vec![],
+        }
+    }
+
     pub fn get_link(&self, n: usize) -> Option<&Link> {
         let elements = match &self.content {
             Content::File(_) => return None,
