@@ -45,3 +45,13 @@ pub enum Element {
     Link(String, Link),
     Text(String),
 }
+
+pub enum Action {
+    Quit,
+    Load(Link),
+}
+
+pub trait Render {
+    fn render(&self, page: &Page);
+    fn get_action(&self) -> Action;
+}

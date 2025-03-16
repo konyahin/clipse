@@ -1,16 +1,22 @@
-// use std::io::Stdout;
+use colored::Colorize;
+use crate::domain::{DomainError, Element, Page, Action, Render};
 
-// use ratatui::crossterm::event::{self, Event};
-// use ratatui::prelude::CrosstermBackend;
-// use ratatui::widgets::Paragraph;
-// use ratatui::{Frame, Terminal};
+pub struct Terminal;
 
-use crate::domain::{DomainError, Element, Page};
+impl Render for Terminal {
+    fn render(&self, page: &Page) {
+        show(page);
+    }
 
-pub fn show(page: &Page) {
+    fn get_action(&self) -> Action {
+        Action::Quit
+    }
+}
+
+fn show(page: &Page) {
     println!(
-        "=== | Show {}:{}{}",
-        page.link.host, page.link.port, page.link.url
+        "{}",
+        format!("=== | Show {}:{}{}", page.link.host, page.link.port, page.link.url).green()
     );
     match &page.content {
         crate::domain::Content::Map(lines) => lines.iter().for_each(draw_line),
@@ -18,32 +24,22 @@ pub fn show(page: &Page) {
         crate::domain::Content::None => println!(),
     };
     if !page.errors.is_empty() {
-        println!("=== | Errors:");
+        println!("{}", "=== | Errors:".red());
         page.errors.iter().for_each(show_error);
     }
 }
 
 pub fn show_error(error: &DomainError) {
     match error {
-        DomainError::Network(message) => println!("Network Error: {message}"),
-        DomainError::Display(message) => println!("Render Error: {message}"),
-        DomainError::Parsing(message) => println!("Parsing Error: {message}"),
+        DomainError::Network(message) => println!("{}: {message}", "Network Error".red()),
+        DomainError::Display(message) => println!("{}: {message}", "Render Error".red()),
+        DomainError::Parsing(message) => println!("{}: {message}", "Parsing Error".red()),
     }
 }
 
 fn draw_line(line: &Element) {
     match line {
-        Element::Link(text, _link) => println!("link| {text}"),
+        Element::Link(text, _link) => println!("{}| {text}", "link".blue()),
         Element::Text(text) => println!("    | {text}"),
     }
 }
-// pub fn draw(terminal: Terminal<CrosstermBackend<Stdout>>) -> Result<> {
-//     terminal.draw(|frame| render(frame, &answer))?;
-//     if matches!(event::read()?, Event::Key(_)) {
-//         break;
-//     }
-// }
-
-// fn render(frame: &mut Frame, content: &str) {
-//     frame.render_widget(Paragraph::new(content), frame.area());
-// }
