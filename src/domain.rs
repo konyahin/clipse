@@ -30,6 +30,10 @@ pub enum Format {
 
 impl Link {
     pub fn from_string(link: &str) -> Option<Self> {
+        if !link.contains(".") && !link.eq("localhost") {
+            return None;
+        }
+
         let mut parts = link.split("/");
 
         let host_port = if let Some(host_port) = parts.next() {
