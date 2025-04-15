@@ -1,12 +1,18 @@
 use std::{
-    io::{Read, Write},
-    net::TcpStream,
+    io::{Read, Write}, net::{TcpStream, ToSocketAddrs}, time::Duration
 };
 
 use crate::domain::{DomainError, Link};
 
 pub fn download_content(link: &Link) -> Result<String, DomainError> {
-    let mut stream = TcpStream::connect(&link.host_port).map_err(to_domain_error)?;
+    let addrs = link.host_port.to_socket_addrs().map_err(to_domain_error)?;
+
+    let addr = match addrs.last() {
+        Some(addr) => addr,
+        None => return Err(DomainError::Parsing(format!("Wrong link: {}", link.host_port)))
+    };
+
+    let mut stream = TcpStream::connect_timeout(&addr, Duration::from_secs(5)).map_err(to_domain_error)?;
 
     stream
         .write_all(format!("{}\r\n", link.url).as_bytes())
