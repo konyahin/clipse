@@ -30,7 +30,7 @@ impl Render for Terminal {
             }),
             crate::domain::Content::File(text) => println!("{text}"),
             crate::domain::Content::None => println!(),
-        };
+        }
         if !page.errors.is_empty() {
             println!("{}", "=== | Errors:".red());
             page.errors.iter().for_each(|e| self.show_error(e));
@@ -50,17 +50,24 @@ impl Render for Terminal {
             let line = line.trim();
 
             match line.split(' ').collect::<Vec<&str>>().as_slice() {
-                ["quit"] => return Action::Quit,
-                ["follow", number] => match number.parse::<usize>() {
-                    Ok(number) => return Action::Follow(number),
-                    Err(_) => println!("You should specify link number"),
-                },
-                ["go", link] => match Link::from_string(link) {
+                ["quit"] | ["q"] => return Action::Quit,
+                ["go", link] | ["g", link] => match Link::from_string(link) {
                     Some(link) => return Action::Load(link),
                     None => println!("Wrong format for link: {link}"),
                 },
-                ["help"] => println!("{USAGE}"),
+                ["help"] | ["h"] => println!("{USAGE}"),
                 [""] => {}
+                [command] => {
+                    if let Ok(number) = command.parse::<usize>() {
+                        return Action::Follow(number)
+                    }
+
+                    if let Some(link) = Link::from_string(command) {
+                        return Action::Load(link)
+                    }
+
+                    println!("Unknown command: {}", line)
+                },
                 _ => println!("Unknown command: {}", line),
             }
         }
